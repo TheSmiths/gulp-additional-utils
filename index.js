@@ -42,7 +42,7 @@ module.exports = {
     },
 
     isCalabashBuiltSuccess: function (line) {
-       return line.match(/^\*\* BUILD SUCCEEDED \*\*\s*$/) !== null;
+       return module.exports.isBuiltSuccess(line) || line.match(/^\*\* BUILD SUCCEEDED \*\*\s*$/) !== null;
     },
 
     formatJasmineLine: function (line) {

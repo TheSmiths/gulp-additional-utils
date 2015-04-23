@@ -7,5 +7,13 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Matthias Benkort",
-  "license": "Apache"
+  "license": "Apache",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thesmiths/gulp-additional-utils.git"
+  },
+  "bugs": {
+    "url": "https://github.com/thesmiths/gulp-additional-utils/issues"
+  },
+  "homepage": "https://github.com/thesmiths/gulp-additional-utils"
 }
