@@ -29,7 +29,7 @@ module.exports = {
 
     isFailureLine: function (line) {
         var isJasmineFailure = isXXXLine(line, 'FAIL');
-        var isCalabashFailure = line.match(/\([0-9]+\s+scenario.+failed,?/);
+        var isCalabashFailure = line.match(/[0-9]+\s+scenario.+\([0-9]+\s+failed,?/);
         return isJasmineFailure || isCalabashFailure;
     },
 
@@ -42,7 +42,7 @@ module.exports = {
     },
 
     isCalabashBuiltSuccess: function (line) {
-       return module.exports.isBuiltSuccess(line) || line.match(/^\*\* BUILD SUCCEEDED \*\*\s*$/) !== null;
+       return  line.match(/^\*\* BUILD SUCCEEDED \*\*\s*$/) !== null;
     },
 
     formatJasmineLine: function (line) {
@@ -53,45 +53,42 @@ module.exports = {
     },
 
     formatCalabashLine: function (line) {
-        var src = line;
+        var src = line.split(/\n|\r/);
 
-        /* Feature */
-        var featureReg = /^(Feature:[^\r\n]+)/g;
-        if (line.match(featureReg)) {
-            line = line.replace(featureReg, "\033[1;36m$&\033[0m");  
+        for (var length = src.length, i = 0; i < length; i++) {
+            /* Avoid blank line */
+            if (src[i].match(/^\s+$/)) { continue; }
+
+            /* Feature */
+            if (src[i].match(/^Feature:\s/)) src[i] = "\033[1;36m" + src[i] + "\033[0m";
+
+            /* Failing scenar */
+            if (src[i].match(/^cucumber[^\r\n]+#\s+Scenario/)) {
+                src[i] = "\033[0;31m" + src[i] + "\033[0m";
+                continue;
+            }
+
+            /* Scenario */
+            var scenarReg = /^(\s+Scenario:[^\r\n#]+)/;
+            if (src[i].match(scenarReg)) src[i] =  src[i].replace(scenarReg, "\033[0;36m$&\033[0m");
+            
+            /* Comments */
+            var commentReg = /(#[^\r\n]+)/g;
+            if (src[i].match(commentReg)) {
+                src[i] = src[i].replace(commentReg, "\033[0;30m$&\033[0m");
+            }
+
+            /* Errors */
+            if (src[i].match(/^\s{6,}[^\r\n]+$/)) {
+                src[i] = "\033[0;31m" + src[i] + "\033[0m";
+                src[i-1] = "\033[0;31m" + src[i-1] + "\033[0m";
+            }
+
+            /* Failure */
+            if (src[i].match(/^Failing Scenarios:/)) src[i] = "\033[1;31m" + src[i] + "\033[0m";
         }
 
-        /* Scenario */
-        var scenarioReg = /(Scenario:[^\r\n#]+)/;
-        if (line.match(scenarioReg)) {
-            line = line.replace(scenarioReg, "\033[0;36m$&\033[0m")
-        }
-        
-        /* Comments */
-        var commentReg = /(#[^\r\n]+)/g, comment;
-        while ((comment = commentReg.exec(src)) !== null) {
-            line = line.replace(comment[1], "\033[0;30m$&\033[0m");
-        }
-
-        /* Errors */
-        var errorReg = /((\r|\n)[^\r\n]+\(RuntimeError\))/;
-        if (line.match(errorReg)) {
-            line = line.replace(errorReg, "\033[0;31m$&\033[0m");
-        }
-
-        /* Failure */
-        var failureReg = /(^Failing Scenarios:)/;
-        if (line.match(failureReg)) {
-            line = line.replace(failureReg, "\033[1;31m$&\033[0m");
-        }
-
-        /* Step Definition*/
-        var stepReg = /You can implement/;
-        if (line.match(stepReg)) {
-            line = "\033[0;33m" + line + "\033[0m";
-        }
-
-        return line;
+        return src.join('\n');
     },
 
     clean_env: function () {
