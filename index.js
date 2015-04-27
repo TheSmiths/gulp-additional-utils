@@ -91,7 +91,7 @@ module.exports = {
         return src.join('\n');
     },
 
-    clean_env: function () {
+    clean_env: function (callback) {
         exec('ps', function (err, stdout) {
             if (err) { 
                 process.stdout.write('\033[1;30mFailed to clean environment\033[0m\n');
@@ -102,8 +102,8 @@ module.exports = {
                 while ((pid = re.exec(stdout)) !== null) {
                     exec('kill -9 ' + pid[1]);
                 }
-
-                exec('ti clean && tishadow clear');
+		
+                exec('ti clean && tishadow clear', callback);
             }   
         });
     },
